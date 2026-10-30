@@ -1,0 +1,96 @@
+@implements IDisposable
+@inject VikingosState State
+
+<h2>@(State.EnEdicion is null ? "Registrar vikingo" : $"Editar a {State.EnEdicion.Nombre}")</h2>
+
+<EditForm Model="_modelo" OnValidSubmit="GuardarAsync" FormName="vikingo">
+    @* DataAnnotationsValidator usa los atributos [Required], [Range]... de VikingoRequest *@
+    <DataAnnotationsValidator />
+
+    <div class="campo">
+        <label for="nombre">Nombre</label>
+        <InputText id="nombre" @bind-Value="_modelo.Nombre" placeholder="Ej. Ragnar" />
+        <ValidationMessage For="() => _modelo.Nombre" />
+    </div>
+
+    <div class="campo">
+        <label for="batallas">Número de batallas ganadas</label>
+        <InputNumber id="batallas" @bind-Value="_modelo.BatallasGanadas" min="0" max="1000" />
+        <ValidationMessage For="() => _modelo.BatallasGanadas" />
+    </div>
+
+    <div class="campo">
+        <label for="arma">Arma favorita</label>
+        <InputSelect id="arma" @bind-Value="_modelo.ArmaFavorita">
+            <option value="">-- Seleccione --</option>
+            @foreach (var arma in Enum.GetValues<ArmaFavorita>())
+            {
+                <option value="@arma">@arma.ToTexto()</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="() => _modelo.ArmaFavorita" />
+    </div>
+
+    <div class="campo">
+        <label for="honor">Nivel de honor</label>
+        <InputSelect id="honor" @bind-Value="_modelo.NivelHonor">
+            <option value="">-- Seleccione --</option>
+            @foreach (var honor in Enum.GetValues<NivelHonor>())
+            {
+                <option value="@honor">@honor.ToTexto()</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="() => _modelo.NivelHonor" />
+    </div>
+
+    <div class="campo">
+        <label for="causa">Causa de muerte gloriosa</label>
+        <InputSelect id="causa" @bind-Value="_modelo.CausaMuerte">
+            <option value="">-- Seleccione --</option>
+            @foreach (var causa in Enum.GetValues<CausaMuerte>())
+            {
+                <option value="@causa">@causa.ToTexto()</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="() => _modelo.CausaMuerte" />
+    </div>
+
+    <div class="acciones">
+        <button type="submit" class="btn btn-primario" disabled="@State.Cargando">
+            @(State.Cargando ? "Guardando..." : State.EnEdicion is null ? "Registrar" : "Guardar cambios")
+        </button>
+        @if (State.EnEdicion is not null)
+        {
+            <button type="button" class="btn btn-secundario" @onclick="State.CancelarEdicion">Cancelar</button>
+        }
+    </div>
+</EditForm>
+
+@code {
+    private VikingoRequest _modelo = new();
+    private Guid? _idCargado;
+
+    protected override void OnInitialized() => State.OnChange += AlCambiarEstado;
+
+    /// <summary>Si el usuario escogió "Editar" en la lista, se precarga el formulario con ese vikingo.</summary>
+    private void AlCambiarEstado()
+    {
+        if (State.EnEdicion?.Id != _idCargado)
+        {
+            _idCargado = State.EnEdicion?.Id;
+            _modelo = State.EnEdicion?.ToRequest() ?? new VikingoRequest();
+        }
+        StateHasChanged();
+    }
+
+    private async Task GuardarAsync()
+    {
+        if (await State.GuardarAsync(_modelo))
+        {
+            _idCargado = null;
+            _modelo = new VikingoRequest();
+        }
+    }
+
+    public void Dispose() => State.OnChange -= AlCambiarEstado;
+}

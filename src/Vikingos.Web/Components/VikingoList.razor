@@ -1,0 +1,74 @@
+@implements IDisposable
+@inject VikingosState State
+
+@if (State.Cargando && State.Vikingos.Count == 0)
+{
+    <p class="vacio">Cargando vikingos...</p>
+}
+else if (State.Vikingos.Count == 0)
+{
+    <p class="vacio">No hay vikingos registrados todavía.</p>
+}
+else
+{
+    <div class="tabla-scroll">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Batallas</th>
+                    <th>Arma</th>
+                    <th>Honor</th>
+                    <th>Muerte gloriosa</th>
+                    <th>Valhalla Points</th>
+                    <th>Categoría</th>
+                    <th>Estado</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var vikingo in State.Vikingos)
+                {
+                    <tr class="@(State.EnEdicion?.Id == vikingo.Id ? "seleccionado" : null)">
+                        <td>@vikingo.Nombre</td>
+                        <td>@vikingo.BatallasGanadas</td>
+                        <td>@vikingo.ArmaFavorita.ToTexto()</td>
+                        <td>@vikingo.NivelHonor.ToTexto()</td>
+                        <td>@vikingo.CausaMuerte.ToTexto()</td>
+                        <td><strong>@vikingo.ValhallaPoints</strong></td>
+                        <td><span class="chip chip-@vikingo.Categoria">@vikingo.Categoria.ToTexto()</span></td>
+                        <td class="@(vikingo.AprobadoParaValhalla ? "aprobado" : "pendiente")">@vikingo.Mensaje</td>
+                        <td class="acciones-fila">
+                            @if (_porEliminar == vikingo.Id)
+                            {
+                                <span>¿Seguro?</span>
+                                <button class="btn btn-peligro" disabled="@State.Cargando" @onclick="() => EliminarAsync(vikingo)">Sí</button>
+                                <button class="btn btn-secundario" @onclick="() => _porEliminar = null">No</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-secundario" disabled="@State.Cargando" @onclick="() => State.Editar(vikingo)">Editar</button>
+                                <button class="btn btn-peligro" disabled="@State.Cargando" @onclick="() => _porEliminar = vikingo.Id">Eliminar</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    // Id del vikingo que espera confirmación de borrado (confirmación en línea, sin diálogos del navegador).
+    private Guid? _porEliminar;
+
+    protected override void OnInitialized() => State.OnChange += StateHasChanged;
+
+    private async Task EliminarAsync(VikingoResponse vikingo)
+    {
+        _porEliminar = null;
+        await State.EliminarAsync(vikingo);
+    }
+
+    public void Dispose() => State.OnChange -= StateHasChanged;
+}

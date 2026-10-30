@@ -1,0 +1,41 @@
+@api = http://localhost:5080/api/vikingos
+
+### Listar todos
+GET {{api}}
+Accept: application/json
+
+### Crear
+POST {{api}}
+Content-Type: application/json
+
+{
+  "nombre": "Bjorn",
+  "batallasGanadas": 85,
+  "armaFavorita": "Espada",
+  "nivelHonor": "Alto",
+  "causaMuerte": "DueloUnoContraUno"
+}
+
+### Crear inválido (debe responder 400)
+POST {{api}}
+Content-Type: application/json
+
+{
+  "nombre": "",
+  "batallasGanadas": -5
+}
+
+### Actualizar (reemplazar el id)
+PUT {{api}}/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+
+{
+  "nombre": "Bjorn Ironside",
+  "batallasGanadas": 90,
+  "armaFavorita": "Hacha",
+  "nivelHonor": "Alto",
+  "causaMuerte": "BatallaCampoAbierto"
+}
+
+### Eliminar (reemplazar el id)
+DELETE {{api}}/00000000-0000-0000-0000-000000000000

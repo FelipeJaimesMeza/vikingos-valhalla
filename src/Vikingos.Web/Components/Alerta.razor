@@ -1,0 +1,16 @@
+@if (!string.IsNullOrWhiteSpace(Mensaje))
+{
+    <div class="alerta alerta-@Tipo" role="alert">
+        <span>@Mensaje</span>
+        <button class="cerrar" title="Cerrar" @onclick="OnCerrar">✕</button>
+    </div>
+}
+
+@code {
+    [Parameter] public string? Mensaje { get; set; }
+
+    /// <summary>"error" o "exito"; define el color.</summary>
+    [Parameter] public string Tipo { get; set; } = "error";
+
+    [Parameter] public EventCallback OnCerrar { get; set; }
+}
